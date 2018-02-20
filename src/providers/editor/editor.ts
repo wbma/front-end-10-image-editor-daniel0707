@@ -19,13 +19,21 @@ export class EditorProvider {
   numPixels: number;
   functions: any = {
     brightContrast: this.brightContrast,
-    setAutoContrast: this.setAutoContrast
+    setAutoContrast: this.setAutoContrast,
+    colorFilter: this.colorFilter,
+    grayscaleFilter: this.grayscaleFilter
   };
 
   // editor variables
   contrast: string = '10';
   brightness: string = '0';
   autoContrast: boolean;
+  redFilter: string = '0';
+  greenFilter: string = '0';
+  blueFilter: string = '0';
+  strengthFilter: string = '0';
+  grayscale: boolean;
+
   constructor(public http: HttpClient, private file: File) {
     console.log('Hello EditorProvider Provider');
   }
@@ -69,8 +77,6 @@ export class EditorProvider {
   };
 
   applyFilters() {
-    console.log('state before reset is '+this.autoContrast);
-
     this.resetImage();
 
     for (let i in this.functions) {
@@ -104,7 +110,6 @@ export class EditorProvider {
   };
 
   setAutoContrast(thisClass) {
-    console.log('state is '+thisClass.autoContrast);
     if (thisClass.autoContrast) {
       let minRedContrast = 255;
       let maxRedContrast = 0;
@@ -142,10 +147,40 @@ export class EditorProvider {
 
       thisClass.context.clearRect(0, 0, thisClass.canvas.width, thisClass.canvas.height);
       thisClass.context.putImageData(thisClass.imageData, 0, 0);
-      console.log('applied autoCOntrast')
-    }else{console.log('was false')}
+    }
   }
 
+  colorFilter(thisClass){
+    let red = parseInt(thisClass.redFilter);
+    let green = parseInt(thisClass.greenFilter);
+    let blue = parseInt(thisClass.blueFilter);
+    let strength = parseInt(thisClass.strengthFilter);
+
+    for (let i = 0; i < thisClass.numPixels; i++) {
+      thisClass.pixels[i * 4] = thisClass.pixels[i * 4] + red * (strength/100);
+      thisClass.pixels[i * 4 + 1] = thisClass.pixels[i * 4 + 1] + green * (strength/100);
+      thisClass.pixels[i * 4 + 2] = thisClass.pixels[i * 4 + 2] + blue * (strength)/100;
+    }
+
+    thisClass.context.clearRect(0, 0, thisClass.canvas.width, thisClass.canvas.height);
+    thisClass.context.putImageData(thisClass.imageData, 0, 0);
+  }
+
+  grayscaleFilter(thisClass){
+    if(thisClass.grayscale) {
+      for (let i = 0; i < thisClass.numPixels; i++) {
+        //sRGB grayscale
+        let coefficient = thisClass.pixels[i * 4] * 0.2126 + thisClass.pixels[i * 4 + 1] * 0.7152 + thisClass.pixels[i * 4 + 2] * 0.0722;
+
+        thisClass.pixels[i * 4] = coefficient;
+        thisClass.pixels[i * 4 + 1] = coefficient;
+        thisClass.pixels[i * 4 + 2] = coefficient;
+      }
+
+      thisClass.context.clearRect(0, 0, thisClass.canvas.width, thisClass.canvas.height);
+      thisClass.context.putImageData(thisClass.imageData, 0, 0);
+    }
+  }
 
   getExif(img) {
     let latLon: any;

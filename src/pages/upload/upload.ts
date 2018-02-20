@@ -32,6 +32,7 @@ export class UploadPage {
   latLon: any;
   image = this.renderer.createElement('img');
   canvas: any;
+  isCanvasEmpty = true;
 
   loading = this.loadingCtrl.create({
     content: 'Uploading, please wait...',
@@ -82,8 +83,11 @@ export class UploadPage {
       }).catch((error) => {
         console.log('Error getting location', error);
       });
-
+     //if image capture success
+      this.isCanvasEmpty = false;
     }, (err) => {
+      // canvas remains empty
+      this.isCanvasEmpty = true;
       // Handle error
       console.error(err);
     });
